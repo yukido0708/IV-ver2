@@ -102,7 +102,7 @@
   <div class="control-card">
     <div class="section-title">수액 용량 (mL)</div>
     <div class="btn-grid">
-      <button class="btn-chip active" onclick="setVol(100, this)">100 mL</button>
+      <button class="btn-chip" onclick="setVol(100, this)">100 mL</button>
       <button class="btn-chip" onclick="setVol(250, this)">250 mL</button>
       <button class="btn-chip" onclick="setVol(500, this)">500 mL</button>
       <button class="btn-chip" onclick="setVol(1000, this)">1L</button>
@@ -112,7 +112,7 @@
     <div class="section-title">주입 시간</div>
     <div class="btn-grid-4">
       <button class="btn-chip" onclick="setTime(30, this)">30분</button>
-      <button class="btn-chip active" onclick="setTime(60, this)">1시간</button>
+      <button class="btn-chip" onclick="setTime(60, this)">1시간</button>
       <button class="btn-chip" onclick="setTime(90, this)">1.5시간</button>
       <button class="btn-chip" onclick="setTime(120, this)">2시간</button>
       <button class="btn-chip" onclick="setTime(240, this)">4시간</button>
@@ -140,7 +140,7 @@
 </div>
 
 <script>
-  let vol = 100, timeMin = 60, gtt = 20;
+  let vol = 0, timeMin = 0, gtt = 20;
   let intervalSec = 1.8;
   let timerId = null;
   let audioCtx = null;
@@ -162,8 +162,8 @@
   }
 
   function updateCustom() {
-    vol = parseFloat(document.getElementById('customVol').value) || 100;
-    timeMin = parseFloat(document.getElementById('customTime').value) || 60;
+    vol = parseFloat(document.getElementById('customVol').value) || 0;
+    timeMin = parseFloat(document.getElementById('customTime').value) || 0;
     calculate();
   }
 
