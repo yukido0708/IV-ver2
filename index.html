@@ -138,7 +138,7 @@
 
 <script>
   let vol = 0, timeMin = 0, gtt = 20;
-  let intervalSec = 1.8;
+  let intervalSec = 0;
   let timerId = null;
   let audioCtx = null;
 
@@ -166,6 +166,15 @@
 
   function calculate() {
     gtt = parseFloat(document.getElementById('gttSelect').value);
+
+// 용량이나 시간이 입력되지 않았으면 결과창을 비움
+  if (!vol || !timeMin || vol <= 0 || timeMin <= 0) {
+    document.getElementById('valFlow').innerText = '-- mL/h';
+    document.getElementById('valGtt').innerText = '-- gtt/m';
+    document.getElementById('valInterval').innerText = '-- s';
+    return;
+  }
+    
     const gttMin = (vol * gtt) / timeMin;
     const mlHr = (vol / timeMin) * 60;
     intervalSec = 60 / gttMin;
