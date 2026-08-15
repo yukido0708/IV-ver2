@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>IV 메트로놈</title>
+  <link rel="manifest" href="data:application/json;base64,ewogICJuYW1lIjogIklWIE1ldHJvbm9tZSIsCiAgInNob3J0X25hbWUiOiAiSVYgTWV0cm9ub21lIiwKICAic3RhcnRfdXJsIjogIi4iLAogICJkaXNwbGF5IjogInN0YW5kYWxvbmUiLAogICJiYWNrZ3JvdW5kX2NvbG9yIjogIiMxZTFlMmUiLAogICJ0aGVtZV_jb2xvcIjogIiMwZDZmZDEiCn0=">
+  <meta name="theme-color" content="#1e1e2e">
+  <style>
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #121218; color: #eceff4; margin: 0; padding: 16px; display: flex; justify-content: center; }
+    .container { width: 100%; max-width: 420px; display: flex; flex-direction: column; gap: 16px; }
+    
+    /* Header */
+    .header { display: flex; justify-content: space-between; align-items: center; padding: 4px 8px; }
+    .header h1 { font-size: 1.1rem; font-weight: 700; margin: 0; color: #4c566a; letter-spacing: 1px; }
+
+    /* Visual Drip Chamber */
+    .chamber-card { background: #1e1e2e; border-radius: 20px; padding: 20px; display: flex; flex-direction: column; align-items: center; box-shadow: 0 8px 24px rgba(0,0,0,0.4); border: 1px solid #2e3440; position: relative; overflow: hidden; }
+    .chamber-container { width: 90px; height: 160px; border: 3px solid #4c566a; border-radius: 12px 12px 24px 24px; position: relative; background: rgba(255,255,255,0.02); overflow: hidden; margin: 10px 0; }
+    .nozzle { width: 12px; height: 16px; background: #4c566a; margin: 0 auto; border-radius: 0 0 4px 4px; }
+    .drip-drop { width: 12px; height: 12px; background: #88c0d0; border-radius: 0 50% 50% 50%; transform: rotate(45deg); position: absolute; left: calc(50% - 6px); top: 16px; opacity: 0; }
+    .fluid-level { width: 100%; height: 35px; background: rgba(136, 192, 208, 0.3); border-top: 2px solid #88c0d0; position: absolute; bottom: 0; transition: background 0.1s; }
+    .fluid-level.ripple { background: rgba(136, 192, 208, 0.6); }
+
+    .status-badge { font-size: 0.75rem; font-weight: 700; padding: 4px 12px; border-radius: 12px; background: #2e3440; color: #d8dee9; letter-spacing: 1px; margin-top: 4px; }
+    .status-badge.active { background: #a3be8c; color: #2e3440; }
+
+    /* Dashboard */
+    .dashboard { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; background: #1e1e2e; padding: 12px; border-radius: 16px; border: 1px solid #2e3440; text-align: center; }
+    .dash-item .label { font-size: 0.65rem; color: #d8dee9; text-transform: uppercase; margin-bottom: 4px; }
+    .dash-item .value { font-size: 1.1rem; font-weight: 700; color: #88c0d0; }
+
+    /* Controls & Presets */
+    .control-card { background: #1e1e2e; border-radius: 20px; padding: 16px; border: 1px solid #2e3440; display: flex; flex-direction: column; gap: 12px; }
+    .section-title { font-size: 0.8rem; color: #d8dee9; font-weight: 600; }
+    .btn-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+    .btn-grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+    
+    .btn-chip { background: #2e3440; border: 1px solid #3b4252; color: #eceff4; padding: 10px 4px; border-radius: 10px; font-size: 0.85rem; font-weight: 600; cursor: pointer; text-align: center; }
+    .btn-chip.active { background: #88c0d0; color: #2e3440; border-color: #88c0d0; }
+
+    .input-group { display: flex; gap: 8px; }
+    .input-box { flex: 1; background: #2e3440; border: 1px solid #3b4252; border-radius: 10px; padding: 8px; text-align: center; color: #fff; font-size: 0.9rem; width: 100%; }
+    select.input-box { font-size: 0.85rem; }
+
+    /* Start Button */
+    .btn-start { background: #88c0d0; color: #2e3440; border: none; padding: 16px; border-radius: 14px; font-size: 1.1rem; font-weight: 700; cursor: pointer; width: 100%; margin-top: 4px; }
+    .btn-start.running { background: #bf616a; color: #fff; }
+
+    .disclaimer { font-size: 0.7rem; color: #4c566a; text-align: center; margin-top: 4px; line-height: 1.3; }
+
+    @keyframes dropFall {
+      0% { top: 16px; opacity: 1; }
+      90% { top: 110px; opacity: 1; }
+      100% { top: 115px; opacity: 0; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <div class="header">
+    <h1>IV DRIP METRONOME</h1>
+  </div>
+
+  <div class="chamber-card">
+    <div class="nozzle"></div>
+    <div class="chamber-container">
+      <div class="drip-drop" id="dripDrop"></div>
+      <div class="fluid-level" id="fluidLevel"></div>
+    </div>
+    <div class="status-badge" id="statusBadge">STOPPED</div>
+  </div>
+
+  <div class="dashboard">
+    <div class="dash-item">
+      <div class="label">Flow Rate</div>
+      <div class="value" id="valFlow">100 mL/h</div>
+    </div>
+    <div class="dash-item">
+      <div class="label">Drip Rate</div>
+      <div class="value" id="valGtt">33 gtt/m</div>
+    </div>
+    <div class="dash-item">
+      <div class="label">Interval</div>
+      <div class="value" id="valInterval">1.80 s</div>
+    </div>
+  </div>
+
+  <div class="control-card">
+    <div class="section-title">수액 용량 (mL)</div>
+    <div class="btn-grid">
+      <button class="btn-chip active" onclick="setVol(100, this)">100 mL</button>
+      <button class="btn-chip" onclick="setVol(250, this)">250 mL</button>
+      <button class="btn-chip" onclick="setVol(500, this)">500 mL</button>
+    </div>
+
+    <div class="section-title">주입 시간</div>
+    <div class="btn-grid-4">
+      <button class="btn-chip" onclick="setTime(30, this)">30분</button>
+      <button class="btn-chip active" onclick="setTime(60, this)">1시간</button>
+      <button class="btn-chip" onclick="setTime(90, this)">1.5시간</button>
+      <button class="btn-chip" onclick="setTime(120, this)">2시간</button>
+    </div>
+
+    <div class="input-group">
+      <input type="number" id="customVol" class="input-box" value="100" placeholder="용량(mL)" onchange="updateCustom()">
+      <input type="number" id="customTime" class="input-box" value="60" placeholder="시간(분)" onchange="updateCustom()">
+    </div>
+
+    <div class="section-title">점적 계수 (gtt/mL)</div>
+    <select id="gttSelect" class="input-box" onchange="calculate()">
+      <option value="20" selected>20 gtt/mL (성인 표준)</option>
+      <option value="15">15 gtt/mL (성인)</option>
+      <option value="60">60 gtt/mL (소아 Microdrip)</option>
+    </select>
+
+    <button class="btn-start" id="startBtn" onclick="toggleMetronome()">메트로놈 시작</button>
+  </div>
+
+  <div class="disclaimer">
+    * 본 앱은 수액 투여 속도 조절 보조 도구입니다.<br>최종 주입량 및 속도 확인 책임은 사용자에게 있습니다.
+  </div>
+</div>
+
+<script>
+  let vol = 100, timeMin = 60, gtt = 20;
+  let intervalSec = 1.8;
+  let timerId = null;
+  let audioCtx = null;
+
+  function setVol(v, btn) {
+    vol = v;
+    document.getElementById('customVol').value = v;
+    btn.parentElement.querySelectorAll('.btn-chip').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    calculate();
+  }
+
+  function setTime(t, btn) {
+    timeMin = t;
+    document.getElementById('customTime').value = t;
+    btn.parentElement.querySelectorAll('.btn-chip').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    calculate();
+  }
+
+  function updateCustom() {
+    vol = parseFloat(document.getElementById('customVol').value) || 100;
+    timeMin = parseFloat(document.getElementById('customTime').value) || 60;
+    calculate();
+  }
+
+  function calculate() {
+    gtt = parseFloat(document.getElementById('gttSelect').value);
+    const gttMin = (vol * gtt) / timeMin;
+    const mlHr = (vol / timeMin) * 60;
+    intervalSec = 60 / gttMin;
+
+    document.getElementById('valFlow').innerText = `${mlHr.toFixed(0)} mL/h`;
+    document.getElementById('valGtt').innerText = `${gttMin.toFixed(0)} gtt/m`;
+    document.getElementById('valInterval').innerText = `${intervalSec.toFixed(2)} s`;
+
+    if (timerId) {
+      stopMetronome();
+      startMetronome();
+    }
+  }
+
+  function playTick() {
+    // Audio Beep
+    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    
+    osc.frequency.value = 1000;
+    gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.05);
+    osc.start();
+    osc.stop(audioCtx.currentTime + 0.05);
+
+    // Drop Animation Trigger
+    const drop = document.getElementById('dripDrop');
+    const fluid = document.getElementById('fluidLevel');
+
+    drop.style.animation = 'none';
+    drop.offsetHeight; // trigger reflow
+    drop.style.animation = `dropFall ${Math.min(intervalSec, 0.4)}s ease-in forwards`;
+
+    setTimeout(() => {
+      fluid.classList.add('ripple');
+      setTimeout(() => fluid.classList.remove('ripple'), 100);
+    }, Math.min(intervalSec, 0.4) * 1000);
+  }
+
+  function startMetronome() {
+    playTick();
+    timerId = setInterval(playTick, intervalSec * 1000);
+    
+    const btn = document.getElementById('startBtn');
+    btn.innerText = "메트로놈 정지";
+    btn.classList.add('running');
+
+    const badge = document.getElementById('statusBadge');
+    badge.innerText = "ACTIVE";
+    badge.classList.add('active');
+  }
+
+  function stopMetronome() {
+    clearInterval(timerId);
+    timerId = null;
+
+    const btn = document.getElementById('startBtn');
+    btn.innerText = "메트로놈 시작";
+    btn.classList.remove('running');
+
+    const badge = document.getElementById('statusBadge');
+    badge.innerText = "STOPPED";
+    badge.classList.remove('active');
+  }
+
+  function toggleMetronome() {
+    if (timerId) stopMetronome();
+    else startMetronome();
+  }
+</script>
+</body>
+</html>
